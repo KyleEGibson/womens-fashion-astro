@@ -1,0 +1,49 @@
+---
+interface Props {
+  items: { id: string; label: string }[];
+}
+const { items } = Astro.props;
+---
+<nav class="toc" aria-label="Table of contents">
+  <p class="toc-title">On This Page</p>
+  <ul>
+    {items.map((item) => (
+      <li><a href={`#${item.id}`}>{item.label}</a></li>
+    ))}
+  </ul>
+</nav>
+
+<style>
+  .toc {
+    position: sticky;
+    top: 6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.4rem;
+  }
+  .toc-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-dark);
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+  }
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .toc a {
+    color: var(--fg-muted);
+    text-decoration: none;
+    font-size: 0.86rem;
+  }
+  .toc a:hover {
+    color: var(--accent-dark);
+  }
+</style>

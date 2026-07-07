@@ -1,0 +1,38 @@
+/*
+ * Per-site design tokens. Every niche site overrides this file with its own
+ * palette + type choices. global.css consumes these variables but never
+ * defines color/font values itself — keep that separation so the shared
+ * template can be updated without fighting site-specific branding.
+ */
+:root {
+  /* Ivory, white, beige, charcoal, blush — luxury fashion editorial */
+  --bg: #ffffff;
+  --bg-alt: #faf8f4;
+  --surface: #ffffff;
+  --text: #2c2a28;
+  --text-secondary: #6e685f;
+  --border: #e8e1d5;
+
+  --accent: #cf9fa3;
+  --accent-dark: #a97579;
+  --accent-soft: #f5e9ea;
+
+  --gold: #b3a082;
+
+  /* Shape + elevation */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --shadow: 0 8px 24px rgba(30, 25, 20, 0.05);
+  --shadow-lift: 0 16px 36px rgba(30, 25, 20, 0.1);
+
+  /* Type */
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --max-width: 1180px;
+
+  --fg: var(--text);
+  --fg-muted: var(--text-secondary);
+}
+

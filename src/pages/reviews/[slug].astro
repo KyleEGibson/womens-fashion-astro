@@ -1,0 +1,476 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
+import StarRating from "../../components/StarRating.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import ComparisonTable from "../../components/ComparisonTable.astro";
+
+export async function getStaticPaths() {
+  const reviews = await getCollection("reviews");
+  return reviews.map((review) => ({
+    params: { slug: review.slug },
+    props: { review, allReviews: reviews },
+  }));
+}
+
+const { review, allReviews } = Astro.props;
+const { Content } = await review.render();
+const d = review.data;
+
+const categorySlug = d.category.toLowerCase().replace(/\s+/g, "-");
+const sameSubcategory = allReviews.filter(
+  (r) => r.slug !== review.slug && r.data.subcategory === d.subcategory
+);
+const sameCategoryOnly = allReviews.filter(
+  (r) => r.slug !== review.slug && r.data.category === d.category && r.data.subcategory !== d.subcategory
+);
+const related = [...sameSubcategory, ...sameCategoryOnly].slice(0, 5);
+const relatedHeading = sameSubcategory.length > 0 ? `More ${d.subcategory}` : "Related Reviews";
+
+const wordCount = d.excerpt.split(/\s+/).length + 400;
+const readingTime = Math.max(3, Math.round(wordCount / 200));
+
+const tocItems = [
+  { id: "overview", label: "Overview" },
+  { id: "pros-cons", label: "Pros & Cons" },
+  { id: "ingredients", label: "Key Features" },
+  { id: "review-body", label: "Full Review" },
+  { id: "price-comparison", label: "Price Comparison" },
+  ...(d.alternatives?.length ? [{ id: "alternatives", label: "Alternatives" }] : []),
+  { id: "faq", label: "FAQs" },
+  { id: "verdict", label: "Final Verdict" },
+];
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: d.productName,
+  brand: { "@type": "Brand", name: d.brand },
+  image: new URL(d.image, Astro.site).toString(),
+  description: d.excerpt,
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: d.rating,
+    bestRating: "5",
+    reviewCount: 1,
+  },
+  review: {
+    "@type": "Review",
+    author: { "@type": "Person", name: d.author },
+    datePublished: d.publishDate.toISOString(),
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: d.rating,
+      bestRating: "5",
+    },
+  },
+  offers: {
+    "@type": "Offer",
+    price: d.price.replace(/[^0-9.]/g, ""),
+    priceCurrency: "USD",
+    url: d.affiliateLink,
+  },
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: d.faqs.map((f: any) => ({
+    "@type": "Question",
+    name: f.question,
+    acceptedAnswer: { "@type": "Answer", text: f.answer },
+  })),
+};
+
+const dateFmt = d.publishDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+---
+<BaseLayout
+  title={d.title}
+  description={d.excerpt}
+  image={d.image}
+  showReadingProgress={true}
+  schema={{ "@graph": [productSchema, faqSchema] }}
+>
+  <main class="container review-page">
+    <Breadcrumbs
+      items={[
+        { label: "Home", href: "/" },
+        { label: d.category, href: `/category/${categorySlug}/` },
+        { label: d.productName },
+      ]}
+    />
+
+    <div class="review-layout">
+      <article class="review-main">
+        <header id="overview" class="review-header">
+          <span class="card-category">{d.category} &middot; {d.subcategory}</span>
+          <h1>{d.title}</h1>
+          <div class="review-meta">
+            <span>By {d.author}</span>
+            <span>&middot; {dateFmt}</span>
+            <span>&middot; {readingTime} min read</span>
+          </div>
+          <div class="rating-row">
+            <StarRating rating={d.rating} />
+            <span class="overall-score">Overall Score: <strong>{d.rating.toFixed(1)}/5</strong></span>
+          </div>
+        </header>
+
+        <img class="hero-image" src={d.image} alt={d.imageAlt} width="800" height="500" loading="lazy" />
+
+        <div class="quick-facts">
+          <div>
+            <h3>Best For</h3>
+            <ul>{d.bestFor.map((b: string) => <li>{b}</li>)}</ul>
+          </div>
+          <div>
+            <h3>Compatibility</h3>
+            <p>{d.compatibility}</p>
+          </div>
+          <div>
+            <h3>Price</h3>
+            <p class="price">{d.price}</p>
+          </div>
+        </div>
+
+        <section id="pros-cons" class="pros-cons">
+          <div class="pros">
+            <h3>Pros</h3>
+            <ul>{d.pros.map((p: string) => <li>&#10003; {p}</li>)}</ul>
+          </div>
+          <div class="cons">
+            <h3>Cons</h3>
+            <ul>{d.cons.map((c: string) => <li>&#10007; {c}</li>)}</ul>
+          </div>
+        </section>
+
+        <section id="ingredients" class="ingredients">
+          <h2>Key Features</h2>
+          <table class="feature-table">
+            <thead><tr><th>Feature</th><th>Details</th></tr></thead>
+            <tbody>
+              {d.keyIngredients.map((ing: any) => (
+                <tr><td>{ing.name}</td><td>{ing.benefit}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section id="review-body" class="review-body">
+          <Content />
+        </section>
+
+        <section id="price-comparison" class="price-comparison">
+          <h2>Price Comparison</h2>
+          <table class="price-table">
+            <thead><tr><th>Retailer</th><th>Price</th></tr></thead>
+            <tbody>
+              {d.comparisonPrices.map((c: any) => (
+                <tr><td>{c.retailer}</td><td>{c.price}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        {d.alternatives?.length > 0 && (
+          <section id="alternatives" class="alternatives">
+            <h2>Alternatives Worth Considering</h2>
+            <ComparisonTable rows={d.alternatives} />
+          </section>
+        )}
+
+        <section id="faq" class="faq">
+          <h2>Frequently Asked Questions</h2>
+          {d.faqs.map((f: any) => (
+            <details class="faq-item">
+              <summary>{f.question}</summary>
+              <p>{f.answer}</p>
+            </details>
+          ))}
+        </section>
+
+        <section id="verdict" class="verdict">
+          <h2>Final Verdict</h2>
+          <div class="verdict-card">
+            <StarRating rating={d.rating} />
+            <p>{d.excerpt}</p>
+            <p class="mini-disclosure">Affiliate link &mdash; we may earn a commission at no extra cost to you.</p>
+            <a class="btn btn-primary" href={d.affiliateLink} target="_blank" rel="nofollow sponsored noopener">Check Price &rarr;</a>
+          </div>
+        </section>
+      </article>
+
+      <aside class="review-sidebar">
+        <TableOfContents items={tocItems} />
+        <div class="sidebar-cta">
+          <p class="eyebrow">{d.brand}</p>
+          <p class="sidebar-price">{d.price}</p>
+          <a class="btn btn-primary sidebar-btn" href={d.affiliateLink} target="_blank" rel="nofollow sponsored noopener">Check Price</a>
+          <p class="mini-disclosure">Affiliate link &mdash; we may earn a commission.</p>
+        </div>
+        {related.length > 0 && (
+          <a class="btn btn-outline similar-link" href="#related">View Similar Products &rarr;</a>
+        )}
+      </aside>
+    </div>
+
+    {related.length > 0 && (
+      <section id="related" class="section related">
+        <div class="section-heading">
+          <h2>{relatedHeading}</h2>
+        </div>
+        <div class="card-grid">
+          {related.map((r) => (
+            <ProductCard
+              href={`/reviews/${r.slug}/`}
+              image={r.data.image}
+              imageAlt={r.data.imageAlt}
+              category={r.data.category}
+              title={r.data.productName}
+              rating={r.data.rating}
+              excerpt={r.data.excerpt}
+              linkLabel="Read Review"
+            />
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+</BaseLayout>
+
+<style>
+  .review-page {
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .review-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .review-header h1 {
+    font-size: 2.1rem;
+    margin: 0.5rem 0 0.6rem;
+  }
+
+  .review-meta {
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .rating-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .overall-score {
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+  }
+
+  .card-category {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    background: var(--accent-soft);
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    margin-bottom: 0.6rem;
+  }
+
+  .hero-image {
+    width: 100%;
+    max-height: 500px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.75rem;
+    object-fit: contain;
+    background: var(--bg-alt);
+  }
+
+  .quick-facts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    background: var(--bg-alt);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .quick-facts h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.5rem;
+    color: var(--accent-dark);
+  }
+
+  .quick-facts ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.88rem;
+  }
+
+  .quick-facts p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--fg-muted);
+  }
+
+  .price {
+    font-family: var(--serif);
+    font-size: 1.3rem !important;
+    color: var(--fg) !important;
+  }
+
+  .pros-cons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .pros, .cons {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .pros h3, .cons h3 {
+    font-size: 1rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .pros ul, .cons ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
+  }
+
+  .pros li, .cons li {
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-table, .price-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 2rem;
+    font-size: 0.9rem;
+  }
+
+  .feature-table th, .feature-table td,
+  .price-table th, .price-table td {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .feature-table th, .price-table th {
+    color: var(--accent-dark);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .review-body :global(h2) {
+    font-size: 1.5rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 0;
+  }
+
+  .faq-item summary {
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--serif);
+  }
+
+  .faq-item p {
+    color: var(--fg-muted);
+    margin: 0.75rem 0 0;
+  }
+
+  .verdict-card {
+    background: var(--accent-soft);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .verdict-card p {
+    max-width: 520px;
+    margin: 0.75rem auto 1.25rem;
+  }
+
+  .review-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .similar-link {
+    width: 100%;
+  }
+
+  .sidebar-cta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.4rem;
+    text-align: center;
+    position: sticky;
+    top: 22rem;
+  }
+
+  .sidebar-price {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    margin: 0.35rem 0 1rem;
+  }
+
+  .sidebar-btn {
+    width: 100%;
+  }
+
+  .mini-disclosure {
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    margin: 0.6rem 0 0;
+  }
+
+  .related {
+    margin-top: 3rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .review-layout {
+      grid-template-columns: 1fr;
+    }
+    .quick-facts, .pros-cons {
+      grid-template-columns: 1fr;
+    }
+    .review-sidebar {
+      order: -1;
+    }
+    .toc {
+      display: none;
+    }
+  }
+</style>

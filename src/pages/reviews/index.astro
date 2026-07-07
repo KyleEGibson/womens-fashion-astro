@@ -1,0 +1,59 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+const reviews = (await getCollection("reviews")).sort(
+  (a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+const categories = ["All", ...new Set(reviews.map((r) => r.data.category))];
+---
+<BaseLayout title="Product Reviews" description="Every product review, filterable by category.">
+  <main class="container reviews-index">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Product Reviews" }]} />
+    <header class="page-header">
+      <p class="eyebrow">All Reviews</p>
+      <h1>Product Reviews</h1>
+      <p class="page-sub">Every product we've tested, ranked by real performance and value.</p>
+    </header>
+
+    <div class="filter-bar" id="filter-bar">
+      {categories.map((c, i) => (
+        <button class={`filter-btn ${i === 0 ? "active" : ""}`} data-filter={c}>{c}</button>
+      ))}
+    </div>
+
+    <div class="card-grid" id="reviews-grid">
+      {reviews.map((r) => (
+        <ProductCard href={`/reviews/${r.slug}/`} image={r.data.image} imageAlt={r.data.imageAlt} category={r.data.category} title={r.data.productName} rating={r.data.rating} excerpt={r.data.excerpt} linkLabel="Read Review" />
+      ))}
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  const buttons = document.querySelectorAll(".filter-btn");
+  const cards = document.querySelectorAll("#reviews-grid .card");
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const filter = btn.getAttribute("data-filter");
+      cards.forEach((card) => {
+        const show = filter === "All" || card.getAttribute("data-category") === filter;
+        card.style.display = show ? "" : "none";
+      });
+    });
+  });
+</script>
+
+<style>
+  .reviews-index { padding: 2rem 1.5rem 3rem; }
+  .page-header { max-width: 640px; margin-bottom: 2rem; }
+  .page-header h1 { font-size: 2.2rem; margin: 0.4rem 0 0.6rem; }
+  .page-sub { color: var(--fg-muted); }
+  .filter-bar { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .filter-btn { padding: 0.55rem 1.2rem; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); color: var(--fg); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .filter-btn.active, .filter-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+</style>

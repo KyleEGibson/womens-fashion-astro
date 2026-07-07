@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import { siteConfig } from "../site.config";
+---
+<BaseLayout title="Affiliate Disclosure" description={`${siteConfig.brandName} affiliate disclosure.`}>
+  <main class="container static-page">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Affiliate Disclosure" }]} />
+    <h1>Affiliate Disclosure</h1>
+    <p>{siteConfig.brandName} is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by linking to Amazon.com.</p>
+    <p>When you click on a product link on this site and make a purchase, we may earn a commission at no additional cost to you. This does not influence which products we choose to review or how we rate them — our editorial opinions are formed independently of any affiliate relationship.</p>
+    <p>We only recommend products we've genuinely researched and believe offer real value. This disclosure is provided in accordance with FTC guidelines on affiliate marketing and endorsements.</p>
+  </main>
+</BaseLayout>
+
+<style>
+  .static-page { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .static-page h1 { font-size: 2.2rem; margin: 0.5rem 0 1.25rem; }
+  .static-page p { color: var(--fg-muted); margin-bottom: 1.1rem; }
+</style>

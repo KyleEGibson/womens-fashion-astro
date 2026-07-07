@@ -1,0 +1,153 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProductCard from "../components/ProductCard.astro";
+import { siteConfig } from "../site.config";
+
+const reviews = (await getCollection("reviews")).sort(
+  (a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+const articles = (await getCollection("articles")).sort(
+  (a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+const guides = (await getCollection("guides")).sort(
+  (a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+
+const featuredReviews = reviews.slice(0, 3);
+const trendingProducts = [...reviews].reverse().slice(0, 3);
+const editorsPicks = [...reviews].sort((a, b) => b.data.rating - a.data.rating).slice(0, 3);
+const newArticles = articles.slice(0, 3);
+const featuredGuides = guides.slice(0, 3);
+
+const dateFmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+---
+<BaseLayout title={siteConfig.tagline} description={siteConfig.description}>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">{siteConfig.tagline}</p>
+        <h1>{siteConfig.heroHeadline}</h1>
+        <p class="hero-sub">{siteConfig.description}</p>
+        <a class="btn btn-primary" href="/reviews/">Read Reviews</a>
+      </div>
+      <div class="hero-image">
+        <img src="/images/hero.jpg" alt={siteConfig.brandName} width="600" height="750" />
+      </div>
+    </div>
+  </section>
+
+  <main>
+    {featuredReviews.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <div><p class="eyebrow">This week</p><h2>Featured Reviews</h2></div>
+            <a class="view-all" href="/reviews/">View all reviews &rarr;</a>
+          </div>
+          <div class="card-grid">
+            {featuredReviews.map((r) => (
+              <ProductCard href={`/reviews/${r.slug}/`} image={r.data.image} imageAlt={r.data.imageAlt} category={r.data.category} title={r.data.productName} rating={r.data.rating} excerpt={r.data.excerpt} linkLabel="Read Review" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {trendingProducts.length > 0 && (
+      <section class="section alt-bg">
+        <div class="container">
+          <div class="section-heading"><div><p class="eyebrow">What readers are buying</p><h2>Trending Products</h2></div></div>
+          <div class="card-grid">
+            {trendingProducts.map((r) => (
+              <ProductCard href={`/reviews/${r.slug}/`} image={r.data.image} imageAlt={r.data.imageAlt} category={r.data.category} title={r.data.productName} rating={r.data.rating} excerpt={r.data.excerpt} linkLabel="Read Review" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {editorsPicks.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-heading"><div><p class="eyebrow">Our highest-rated</p><h2>Editor's Picks</h2></div></div>
+          <div class="card-grid">
+            {editorsPicks.map((r) => (
+              <ProductCard href={`/reviews/${r.slug}/`} image={r.data.image} imageAlt={r.data.imageAlt} category={r.data.category} title={r.data.productName} rating={r.data.rating} excerpt={r.data.excerpt} linkLabel="Read Review" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {featuredGuides.length > 0 && (
+      <section class="section alt-bg">
+        <div class="container">
+          <div class="section-heading">
+            <div><p class="eyebrow">Start here</p><h2>Buying Guides</h2></div>
+            <a class="view-all" href="/guides/">View all guides &rarr;</a>
+          </div>
+          <div class="card-grid">
+            {featuredGuides.map((g) => (
+              <ProductCard href={`/guides/${g.slug}/`} image={g.data.image} imageAlt={g.data.imageAlt} category={g.data.category} title={g.data.title} excerpt={g.data.excerpt} linkLabel="Read Guide" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {newArticles.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <div><p class="eyebrow">From the blog</p><h2>Latest Articles</h2></div>
+            <a class="view-all" href="/articles/">View all articles &rarr;</a>
+          </div>
+          <div class="card-grid">
+            {newArticles.map((a) => (
+              <ProductCard href={`/articles/${a.slug}/`} image={a.data.image} imageAlt={a.data.imageAlt} category={a.data.category} title={a.data.title} author={a.data.author} date={dateFmt(a.data.publishDate)} readingTime="5 min read" excerpt={a.data.excerpt} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {siteConfig.homepageCategories.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-heading"><div><p class="eyebrow">Browse by category</p><h2>Popular Categories</h2></div></div>
+          <div class="category-grid">
+            {siteConfig.homepageCategories.map((c) => (
+              <a class="category-tile" href={c.href}>
+                <img src={c.image} alt={c.name} loading="lazy" width="300" height="200" />
+                <span>{c.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+  </main>
+</BaseLayout>
+
+<style>
+  .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; padding: 3.5rem 1.5rem; max-width: var(--max-width); margin: 0 auto; }
+  .hero h1 { font-size: 2.4rem; margin: 0.5rem 0 1rem; line-height: 1.15; }
+  .hero-sub { color: var(--fg-muted); font-size: 1.05rem; max-width: 460px; margin: 0 0 1.75rem; }
+  .hero-image img { border-radius: var(--radius-lg); box-shadow: var(--shadow-lift); width: 100%; height: 100%; max-height: 560px; object-fit: cover; }
+  .alt-bg { background: var(--bg-alt); }
+  .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+  .category-tile { position: relative; display: block; border-radius: var(--radius-md); overflow: hidden; text-decoration: none; aspect-ratio: 3/2; }
+  .category-tile img { width: 100%; height: 100%; object-fit: cover; }
+  .category-tile span { position: absolute; bottom: 1rem; left: 1rem; background: var(--surface); color: var(--fg); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; }
+
+  @media (max-width: 900px) {
+    .category-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 800px) {
+    .hero-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .category-grid { grid-template-columns: 1fr; }
+  }
+</style>

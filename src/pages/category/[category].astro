@@ -1,0 +1,85 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { siteConfig } from "../../site.config";
+
+export async function getStaticPaths() {
+  const { siteConfig } = await import("../../site.config");
+  return Object.keys(siteConfig.categoryTaxonomy).map((category) => ({
+    params: { category: category.toLowerCase().replace(/\s+/g, "-") },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const subcategories = siteConfig.categoryTaxonomy[category] ?? [];
+
+const allReviews = await getCollection("reviews");
+const reviews = allReviews.filter((r) => r.data.category === category);
+---
+<BaseLayout title={category} description={`Reviews of the best ${category.toLowerCase()} products, organized by subcategory.`}>
+  <main class="container category-page">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: category }]} />
+
+    <header class="page-header">
+      <p class="eyebrow">Category</p>
+      <h1>{category}</h1>
+      <p class="page-sub">Reviews and guides across every {category.toLowerCase()} subcategory.</p>
+    </header>
+
+    {subcategories.length > 0 && (
+      <div class="subcategory-tags" id="filter-bar">
+        <button class="tag active" data-filter="All">All</button>
+        {subcategories.map((sub) => <button class="tag" data-filter={sub}>{sub}</button>)}
+      </div>
+    )}
+
+    {reviews.length > 0 ? (
+      <div class="card-grid" id="category-grid">
+        {reviews.map((r) => (
+          <ProductCard
+            href={`/reviews/${r.slug}/`}
+            image={r.data.image}
+            imageAlt={r.data.imageAlt}
+            category={r.data.subcategory}
+            title={r.data.productName}
+            rating={r.data.rating}
+            excerpt={r.data.excerpt}
+            linkLabel="Read Review"
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">New {category.toLowerCase()} reviews are on the way &mdash; check back soon.</p>
+    )}
+  </main>
+</BaseLayout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLElement>("#filter-bar .tag");
+  const cards = document.querySelectorAll<HTMLElement>("#category-grid .card");
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const filter = btn.getAttribute("data-filter");
+      cards.forEach((card) => {
+        const show = filter === "All" || card.getAttribute("data-category") === filter;
+        card.style.display = show ? "" : "none";
+      });
+    });
+  });
+</script>
+
+<style>
+  .category-page { padding: 2rem 1.5rem 3rem; }
+  .page-header { max-width: 640px; margin-bottom: 1.5rem; }
+  .page-header h1 { font-size: 2.2rem; margin: 0.4rem 0 0.6rem; }
+  .page-sub { color: var(--fg-muted); }
+  .subcategory-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+  .tag { font-size: 0.8rem; font-weight: 600; padding: 0.4rem 0.9rem; border-radius: 999px; background: var(--bg-alt); border: 1.5px solid var(--border); color: var(--fg-muted); cursor: pointer; }
+  .tag.active, .tag:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--fg); }
+  .empty-state { color: var(--fg-muted); padding: 2rem 0; }
+</style>

@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+const guides = (await getCollection("guides")).sort(
+  (a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+---
+<BaseLayout title="Buying Guides" description="In-depth buying guides comparing the best options in every category.">
+  <main class="container guides-index">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Buying Guides" }]} />
+    <header class="page-header">
+      <p class="eyebrow">Start Here</p>
+      <h1>Buying Guides</h1>
+      <p class="page-sub">Side-by-side comparisons to help you choose the right product the first time.</p>
+    </header>
+    <div class="card-grid">
+      {guides.map((g) => (
+        <ProductCard href={`/guides/${g.slug}/`} image={g.data.image} imageAlt={g.data.imageAlt} category={g.data.category} title={g.data.title} excerpt={g.data.excerpt} linkLabel="Read Guide" />
+      ))}
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .guides-index { padding: 2rem 1.5rem 3rem; }
+  .page-header { max-width: 640px; margin-bottom: 2rem; }
+  .page-header h1 { font-size: 2.2rem; margin: 0.4rem 0 0.6rem; }
+  .page-sub { color: var(--fg-muted); }
+</style>

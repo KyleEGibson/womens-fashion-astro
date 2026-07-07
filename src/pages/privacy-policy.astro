@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import { siteConfig } from "../site.config";
+---
+<BaseLayout title="Privacy Policy" description={`${siteConfig.brandName} privacy policy.`}>
+  <main class="container static-page">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Privacy Policy" }]} />
+    <h1>Privacy Policy</h1>
+    <p>Last updated {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}.</p>
+    <p>{siteConfig.brandName} does not collect personal information beyond what's required to serve this site. We do not sell or share visitor data with third parties.</p>
+    <p>Like most websites, we use standard analytics cookies to understand site traffic. You can disable cookies in your browser settings at any time.</p>
+  </main>
+</BaseLayout>
+
+<style>
+  .static-page { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .static-page h1 { font-size: 2.2rem; margin: 0.5rem 0 1.25rem; }
+  .static-page p { color: var(--fg-muted); margin-bottom: 1.1rem; }
+</style>

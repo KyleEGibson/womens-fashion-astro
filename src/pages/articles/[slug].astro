@@ -1,0 +1,75 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+export async function getStaticPaths() {
+  const articles = await getCollection("articles");
+  return articles.map((article) => ({
+    params: { slug: article.slug },
+    props: { article, allArticles: articles },
+  }));
+}
+
+const { article, allArticles } = Astro.props;
+const { Content } = await article.render();
+const d = article.data;
+
+const related = allArticles.filter((a) => a.slug !== article.slug && a.data.category === d.category).slice(0, 3);
+const dateFmt = d.publishDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: d.title,
+  image: new URL(d.image, Astro.site).toString(),
+  datePublished: d.publishDate.toISOString(),
+  author: { "@type": "Person", name: d.author },
+};
+---
+<BaseLayout title={d.title} description={d.excerpt} image={d.image} showReadingProgress={true} schema={articleSchema}>
+  <main class="container article-page">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: d.category, href: `/articles/` }, { label: d.title }]} />
+    <article class="article-body">
+      <span class="card-category">{d.category}</span>
+      <h1>{d.title}</h1>
+      <div class="review-meta">
+        <span>By {d.author}</span>
+        <span>&middot; {dateFmt}</span>
+        <span>&middot; 5 min read</span>
+      </div>
+      <img class="hero-image" src={d.image} alt={d.imageAlt} width="800" height="450" loading="lazy" />
+      <div class="prose">
+        <Content />
+      </div>
+    </article>
+
+    {related.length > 0 && (
+      <section class="section related">
+        <div class="section-heading"><h2>Related Articles</h2></div>
+        <div class="card-grid">
+          {related.map((a) => (
+            <ProductCard href={`/articles/${a.slug}/`} image={a.data.image} imageAlt={a.data.imageAlt} category={a.data.category} title={a.data.title} excerpt={a.data.excerpt} />
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+</BaseLayout>
+
+<style>
+  .article-page { padding: 2rem 1.5rem 3rem; }
+  .article-body { max-width: 720px; margin: 0 auto; }
+  .article-body h1 { font-size: 2.2rem; margin: 0.5rem 0 0.6rem; }
+  .review-meta { color: var(--fg-muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+  .card-category {
+    display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--accent-dark); background: var(--accent-soft);
+    padding: 0.3rem 0.7rem; border-radius: 999px; margin-bottom: 0.5rem;
+  }
+  .hero-image { width: 100%; border-radius: var(--radius-lg); margin: 1.5rem 0; object-fit: cover; }
+  .prose :global(h2) { font-size: 1.4rem; margin: 1.75rem 0 0.75rem; }
+  .prose :global(p) { margin: 0 0 1.1rem; }
+  .related { margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2.5rem; max-width: 1080px; margin-left: auto; margin-right: auto; }
+</style>

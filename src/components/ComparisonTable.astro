@@ -1,0 +1,49 @@
+---
+import StarRating from "./StarRating.astro";
+
+interface Row {
+  name: string;
+  image: string;
+  price: string;
+  rating?: number;
+  bestFor?: string;
+  link: string;
+}
+
+interface Props {
+  rows: Row[];
+  ctaLabel?: string;
+}
+
+const { rows, ctaLabel = "Check Price" } = Astro.props;
+---
+<div class="comparison-table-wrap">
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Product</th>
+        {rows.some((r) => r.rating !== undefined) && <th>Rating</th>}
+        {rows.some((r) => r.bestFor) && <th>Best For</th>}
+        <th>Price</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr>
+          <td><img src={row.image} alt={row.name} width="56" height="56" loading="lazy" /></td>
+          <td class="ct-name">{row.name}</td>
+          {rows.some((r) => r.rating !== undefined) && (
+            <td>{row.rating !== undefined ? <StarRating rating={row.rating} showNumber={false} /> : "—"}</td>
+          )}
+          {rows.some((r) => r.bestFor) && <td>{row.bestFor ?? "—"}</td>}
+          <td>{row.price}</td>
+          <td>
+            <a class="ct-cta" href={row.link} target="_blank" rel="nofollow sponsored noopener">{ctaLabel} &rarr;</a>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

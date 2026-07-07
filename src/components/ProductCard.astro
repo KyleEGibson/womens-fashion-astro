@@ -1,0 +1,50 @@
+---
+import StarRating from "./StarRating.astro";
+
+interface Props {
+  href: string;
+  image: string;
+  imageAlt: string;
+  category: string;
+  title: string;
+  author?: string;
+  date?: string;
+  readingTime?: string;
+  excerpt: string;
+  rating?: number;
+  linkLabel?: string;
+}
+
+const {
+  href,
+  image,
+  imageAlt,
+  category,
+  title,
+  author,
+  date,
+  readingTime,
+  excerpt,
+  rating,
+  linkLabel = "Read More",
+} = Astro.props;
+---
+<article class="card" data-category={category}>
+  <a href={href}>
+    <img src={image} alt={imageAlt} loading="lazy" width="400" height="200" />
+  </a>
+  <div class="card-body">
+    <span class="card-category">{category}</span>
+    {rating !== undefined && <StarRating rating={rating} showNumber={false} />}
+    <h3 class="card-title"><a href={href}>{title}</a></h3>
+    {(author || date || readingTime) && (
+      <div class="card-meta">
+        {author && <span>{author}</span>}
+        {date && <span>&middot; {date}</span>}
+        {readingTime && <span>&middot; {readingTime}</span>}
+      </div>
+    )}
+    <p class="card-excerpt">{excerpt}</p>
+    <a class="card-link" href={href}>{linkLabel} &rarr;</a>
+  </div>
+</article>

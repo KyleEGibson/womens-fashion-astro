@@ -1,0 +1,104 @@
+---
+import { siteConfig } from "../site.config";
+
+const year = new Date().getFullYear();
+const [w1, w2, w3] = siteConfig.brandWords;
+---
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <div class="wordmark">{w1}<span>{w2}</span>{w3}</div>
+      <p>{siteConfig.description}</p>
+    </div>
+
+    <nav class="footer-col">
+      <h4>Explore</h4>
+      {siteConfig.footerExploreLinks.map((link) => (
+        <a href={link.href}>{link.label}</a>
+      ))}
+    </nav>
+
+    <nav class="footer-col">
+      <h4>Company</h4>
+      <a href="/about/">About</a>
+    </nav>
+
+    <nav class="footer-col">
+      <h4>Legal</h4>
+      <a href="/privacy-policy/">Privacy Policy</a>
+      <a href="/affiliate-disclosure/">Affiliate Disclosure</a>
+      <a href="/terms-of-service/">Terms of Service</a>
+    </nav>
+  </div>
+
+  <div class="container footer-bottom">
+    <p>&copy; {year} {siteConfig.brandName}.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--bg-alt);
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 2.5rem;
+    padding: 3rem 1.5rem 2rem;
+  }
+
+  .footer-brand .wordmark {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+
+  .footer-brand .wordmark span {
+    color: var(--accent-dark);
+    margin: 0 0.05em;
+  }
+
+  .footer-brand p {
+    color: var(--fg-muted);
+    font-size: 0.88rem;
+    max-width: 320px;
+    margin: 0.75rem 0 1rem;
+  }
+
+  .footer-col h4 {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg);
+    margin: 0 0 1rem;
+  }
+
+  .footer-col a {
+    display: block;
+    color: var(--fg-muted);
+    text-decoration: none;
+    font-size: 0.88rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .footer-col a:hover {
+    color: var(--accent-dark);
+  }
+
+  .footer-bottom {
+    border-top: 1px solid var(--border);
+    padding: 1.25rem 1.5rem 1.75rem;
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+  }
+
+  @media (max-width: 800px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

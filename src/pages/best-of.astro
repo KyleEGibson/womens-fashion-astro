@@ -1,0 +1,59 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+
+const reviews = await getCollection("reviews");
+const categories = [...new Set(reviews.map((r) => r.data.category))];
+const byCategory = (cat: string) =>
+  reviews.filter((r) => r.data.category === cat).sort((a, b) => b.data.rating - a.data.rating);
+
+const year = new Date().getFullYear();
+const lists = categories.map((cat) => ({
+  title: `Best ${cat} of ${year}`,
+  items: byCategory(cat),
+}));
+---
+<BaseLayout title="Best Of Lists" description="Our top-ranked products, updated regularly.">
+  <main class="container best-of-page">
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Best Of Lists" }]} />
+    <header class="page-header">
+      <p class="eyebrow">Curated Roundups</p>
+      <h1>Best Of Lists</h1>
+      <p class="page-sub">Our top picks in each category, ranked by real performance testing.</p>
+    </header>
+
+    {lists.map((list) => (
+      <section class="best-of-list">
+        <h2>{list.title}</h2>
+        <ol>
+          {list.items.map((r, i) => (
+            <li>
+              <a href={`/reviews/${r.slug}/`}>
+                <span class="rank">{i + 1}</span>
+                <span class="name">{r.data.productName}</span>
+                <span class="score">{r.data.rating.toFixed(1)}/5</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+  </main>
+</BaseLayout>
+
+<style>
+  .best-of-page { padding: 2rem 1.5rem 3rem; }
+  .page-header { max-width: 640px; margin-bottom: 2rem; }
+  .page-header h1 { font-size: 2.2rem; margin: 0.4rem 0 0.6rem; }
+  .page-sub { color: var(--fg-muted); }
+  .best-of-list { margin-bottom: 2.5rem; }
+  .best-of-list h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .best-of-list ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+  .best-of-list li { border-bottom: 1px solid var(--border); }
+  .best-of-list a { display: flex; align-items: center; gap: 1rem; padding: 1rem 0.25rem; text-decoration: none; color: var(--fg); }
+  .best-of-list a:hover .name { color: var(--accent-dark); text-decoration: underline; }
+  .rank { font-family: var(--serif); font-weight: 700; color: var(--accent-dark); width: 1.75rem; flex-shrink: 0; }
+  .name { flex: 1; font-weight: 600; }
+  .score { color: var(--fg-muted); font-size: 0.85rem; }
+</style>
